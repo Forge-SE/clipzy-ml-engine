@@ -1,0 +1,42 @@
+
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Redis & Queue
+redis==5.0.1
+
+# Video Processing & Analysis
+opencv-python==4.8.0.76
+librosa==0.10.0
+scenedetect[opencv]==0.6.1  # PySceneDetect
+openai-whisper== 20230117
+transformers==4.36.2
+torch==2.1.1
+soundfile==0.12.1
+Pillow==10.1.0
+scikit-image==0.22.0
+
+# Data Processing
+numpy==1.26.2
+pandas==2.1.3
+scipy==1.11.4
+
+# Logging & Monitoring
+python-json-logger==2.0.7
+
+# Development
+black==23.12.0
+flake8==6.1.0
+mypy==1.7.1
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.1  # For testing
+
+# Utilities
+python-multipart==0.0.6
+aiofiles==23.2.1
+rich==13.7.0  # Beautiful terminal tables and progress bars
