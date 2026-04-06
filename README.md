@@ -406,27 +406,7 @@ job_processed = Counter(...)
 processing_duration = Histogram(...)
 ```
 
-### Real Video Processing
 
-Replace stub implementations with:
-
-**Video Analysis**
-- OpenCV or FFmpeg for frame extraction
-- ML model for shot detection
-- Optical flow for motion analysis
-
-**Audio Analysis**
-- librosa for beat/tempo detection
-- speech recognition (Whisper API)
-- Music genre classification
-
-**Style Extraction**
-- Deep learning model trained on video style
-- Feature extraction and clustering
-
-**Rendering**
-- FFmpeg for encoding
-- Real-time progress tracking
 
 ## Error Handling
 
@@ -510,39 +490,11 @@ LOG_LEVEL=WARNING
 CORS_ORIGINS=["https://app.clipzy.com"]
 REDIS_URL=redis://redis-prod:6379/0
 STORAGE_TYPE=s3
-```
 
-## Key Features
-
-✅ **Production-Ready Architecture**
-- Clean separation of concerns
-- Dependency injection
-- Type hints throughout
-- Structured logging
-
-✅ **Scalable Processing**
-- Redis queue for job distribution
-- Multiple workers support
-- Async/await throughout
-
-✅ **Extensible Design**
-- Modular pipelines (easy to replace)
-- Service abstraction (swap storage backends)
-- Configuration-driven behavior
-
-✅ **Robust Error Handling**
-- Custom exceptions
-- Comprehensive logging
-- Job error tracking
-
-✅ **API Best Practices**
-- Versioned endpoints
-- Standardized responses
-- Comprehensive documentation
 
 ## License
 
-Proprietary - Clipzy AI Video Processing
+Proprietary - Forge Studios & Clipzy AI Video Processing
 
 ## Support
 
