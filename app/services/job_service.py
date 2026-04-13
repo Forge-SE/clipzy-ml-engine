@@ -76,17 +76,17 @@ class JobService:
         Raises:
             JobNotFoundError: If job not found
         """
-        # Try memory first
+        # Try Redis first (has updated status during processing)
+        job_data = self.queue_service.get_job_data(job_id)
+        if job_data:
+            return Job.from_dict(job_data)
+
+        # Fall back to memory if not in Redis
         if job_id in _jobs_store:
             return _jobs_store[job_id]
 
-        # Try Redis
-        job_data = self.queue_service.get_job_data(job_id)
-        if not job_data:
-            raise JobNotFoundError(job_id)
-
-        # Reconstruct job from data
-        return self._job_from_dict(job_data)
+        # Not found anywhere
+        raise JobNotFoundError(job_id)
 
     def list_jobs(self, page: int = 1, page_size: int = 10) -> tuple[list[Job], int]:
         """

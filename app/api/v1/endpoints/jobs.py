@@ -13,7 +13,7 @@ from app.schemas import (
     JobListResponse,
     JobResponse,
 )
-from app.services import get_job_service
+from app.services import get_job_service, get_queue_service
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -102,8 +102,9 @@ async def get_job_result(job_id: str):
 
     try:
         job_service = get_job_service()
+        queue_service = get_queue_service()
         job = job_service.get_job(job_id)
-
+        
         return APIResponse(
             success=True,
             message="Job result retrieved",
