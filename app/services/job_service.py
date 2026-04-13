@@ -268,23 +268,7 @@ class JobService:
     @staticmethod
     def _job_from_dict(data: dict) -> Job:
         """Reconstruct Job from dictionary."""
-        return Job(
-            job_id=data["job_id"],
-            video_id=data["video_id"],
-            status=JobStatus(data["status"]),
-            progress_percent=data.get("progress_percent", 0),
-            current_stage=ProcessingStage(data["current_stage"]) if data.get("current_stage") else None,
-            created_at=datetime.fromisoformat(data["created_at"]),
-            updated_at=datetime.fromisoformat(data["updated_at"]),
-            started_at=datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None,
-            completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
-            template_video_id=data.get("template_video_id"),
-            style_json=data.get("style_json"),
-            output_video_url=data.get("output_video_url"),
-            error=data.get("error"),
-            webhook_url=data.get("webhook_url"),
-            processing_config=data.get("processing_config", {}),
-        )
+        return Job.from_dict(data)
 
 
 # Global job service instance

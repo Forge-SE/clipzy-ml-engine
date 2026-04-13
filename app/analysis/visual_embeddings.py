@@ -3,9 +3,18 @@
 from typing import Optional
 
 import numpy as np
-import torch
+
+try:
+    import torch
+    from transformers import AutoProcessor, AutoModel
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None
+    AutoProcessor = None
+    AutoModel = None
+
 from PIL import Image
-from transformers import AutoProcessor, AutoModel
 from app.core.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -22,6 +31,14 @@ class VisualEmbedder:
             model_name: CLIP model identifier
             device: Device to run on (cpu or cuda)
         """
+        if not TORCH_AVAILABLE:
+            logger.warning("Torch/transformers not installed. Visual embeddings will be disabled.")
+            self.device = None
+            self.model_name = None
+            self.processor = None
+            self.model = None
+            return
+            
         self.device = device
         self.model_name = model_name
 
