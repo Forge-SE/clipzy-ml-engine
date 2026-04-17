@@ -29,8 +29,7 @@ botocore==1.34.0
 # Message Queue
 pika==1.3.2
 
-# NumPy constraint for OpenCV/librosa compatibility
-numpy<2
+
 
 # Video Processing & Analysis
 opencv-python==4.8.0.76
