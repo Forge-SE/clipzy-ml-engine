@@ -2,9 +2,15 @@
 
 # Web Framework
 fastapi==0.104.1
-uvicorn[standard]==0.24.0
+uvicorn==0.24.0
+starlette==0.27.0
+python-multipart==0.0.6
+httpx==0.25.1
+anyio==3.7.1
 pydantic==2.5.0
 pydantic-settings==2.1.0
+
+opencv-python-headless==4.8.1.78
 
 # Redis & Queue
 redis==5.0.1
@@ -28,7 +34,7 @@ numpy<2
 
 # Video Processing & Analysis
 opencv-python==4.8.0.76
-librosa==0.10.0
+librosa==0.10.1
 scenedetect[opencv]==0.6.1  # PySceneDetect
 assemblyai==0.25.0
 transformers==4.36.2
@@ -52,6 +58,11 @@ mypy==1.7.1
 pytest==7.4.3
 pytest-asyncio==0.21.1
 httpx==0.25.1  # For testing
+
+python-dotenv==1.0.0
+aiofiles==23.2.1
+tqdm==4.66.1
+ 
 
 # Utilities
 python-multipart==0.0.6
