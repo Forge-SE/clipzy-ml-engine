@@ -1,60 +1,46 @@
-"""Style application pipeline."""
+"""Compatibility wrapper for Stage 5 style transfer."""
 
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any
 
-from app.core.logging_config import get_logger
-from app.schemas.style import StyleJSON
-
-logger = get_logger(__name__)
+from app.pipelines.style_transfer import StyleTransferProcessor
 
 
 class StyleApplier:
-    """Applies extracted style to user footage."""
+    """Backward-compatible wrapper around StyleTransferProcessor."""
 
     @staticmethod
     def apply(
         input_video_path: str,
-        style: StyleJSON,
+        style: Any,
         output_path: str,
     ) -> dict[str, Any]:
-        """
-        Apply style to user video.
+        """Apply styling from a dict, Pydantic model, or style.json path."""
+        style_source: str | Path | dict[str, Any]
+        temp_path: Path | None = None
 
-        Args:
-            input_video_path: Path to input user video
-            style: StyleJSON to apply
-            output_path: Path for output video
+        if isinstance(style, (str, Path)):
+            style_source = style
+        elif hasattr(style, "model_dump"):
+            style_source = style.model_dump()
+        elif isinstance(style, dict):
+            style_source = style
+        else:
+            style_source = json.loads(json.dumps(style))
 
-        Returns:
-            Dictionary with application results
-        """
-        logger.info(
-            f"Starting style application",
-            extra={"input": input_video_path, "output": output_path}
-        )
+        if isinstance(style_source, dict):
+            with NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as handle:
+                json.dump(style_source, handle, indent=2)
+                temp_path = Path(handle.name)
+            style_source = temp_path
 
-        # Stub implementation - replace with real video processing
-        # (color correction, effects, transitions, audio mixing, etc.)
-
-        result = {
-            "output_video_path": output_path,
-            "processing_time_seconds": 15.0,
-            "status": "success",
-            "applied_effects": [
-                "color_grade",
-                "audio_normalization",
-                "transitions",
-                "motion_effects",
-            ],
-            "quality_metrics": {
-                "color_accuracy": 0.95,
-                "audio_quality": 0.92,
-                "frame_smoothness": 0.88,
-            }
-        }
-
-        logger.info(
-            f"Style application complete",
-            extra={"output": output_path}
-        )
-        return result
+        try:
+            processor = StyleTransferProcessor(style_source)
+            return processor.process(input_video_path=input_video_path, output_path=output_path)
+        finally:
+            if temp_path and temp_path.exists():
+                temp_path.unlink(missing_ok=True)

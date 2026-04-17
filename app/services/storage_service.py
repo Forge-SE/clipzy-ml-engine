@@ -336,6 +336,10 @@ class LocalStorageService:
             logger.error(f"Failed to upload file locally: {str(e)}")
             raise StorageError(f"Failed to upload file locally: {str(e)}")
 
+    def get_download_url(self, storage_path: str, expiration: int = 3600) -> str:
+        """Return the storage path for local files."""
+        return storage_path
+
 
 class StorageService:
     """Factory service for storage operations."""
@@ -372,6 +376,12 @@ class StorageService:
     def upload(self, file_content: bytes, destination_folder: str, filename: str) -> str:
         """Upload file content to storage."""
         return self._service.upload(file_content, destination_folder, filename)
+
+    def get_download_url(self, storage_path: str, expiration: int = 3600) -> str:
+        """Get a downloadable URL when the backend supports it."""
+        if hasattr(self._service, "get_download_url"):
+            return self._service.get_download_url(storage_path, expiration=expiration)
+        return storage_path
 
     def _get_storage_url(self, path: Path) -> str:
         """Convert a local path to a storage URL."""

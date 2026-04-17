@@ -70,12 +70,17 @@ class StyleExtractor:
         # Extract beats
         detected_beats = [
             DetectedBeat(
-                timestamp_ms=beat["timestamp_ms"],
-                confidence=beat["confidence"],
-                frequency=beat["frequency"]
+                timestamp_ms=float(beat.get("timestamp_ms", beat.get("timestamp", 0.0))) * (
+                    1000.0 if beat.get("timestamp_ms") is None else 1.0
+                ),
+                confidence=float(beat.get("confidence", 0.8)),
+                frequency=str(beat.get("frequency", "full")),
             )
             for beat in audio_analysis.get("beats", [])[:5]  # First 5 beats
         ]
+
+        style_dna = video_analysis.get("style_dna", {})
+        motion_intensity = int(motion_analysis.get("average_intensity", 0.0) * 100)
 
         # Assemble complete style
         style = StyleJSON(
@@ -85,17 +90,17 @@ class StyleExtractor:
             frame_rate=30,
             audio_style=audio_style,
             cut_frequency=video_analysis.get("cut_frequency", 3.5),
-            motion_intensity=int(motion_analysis.get("global_motion", {}).get("average_intensity", 0.5) * 100),
-            zoom_usage=30 if motion_analysis.get("global_motion", {}).get("camera_zoom") else 0,
+            motion_intensity=motion_intensity,
+            zoom_usage=30 if motion_analysis.get("has_rapid_motion") else 0,
             primary_transition=primary_transition,
             secondary_transition=None,
             text_overlays=[],
             use_subtitles=audio_analysis.get("has_speech", False),
             detected_beats=detected_beats,
             tempo_bpm=audio_analysis.get("tempo_bpm"),
-            music_genre=audio_analysis.get("music_intervals", [{}])[0].get("genre"),
+            music_genre=audio_analysis.get("music_genre"),
             created_at=datetime.utcnow().isoformat() + "Z",
-            source_duration_seconds=30.0,  # Stub value
+            source_duration_seconds=float(style_dna.get("duration", 30.0)),
             extraction_confidence=0.92,
         )
 

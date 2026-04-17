@@ -45,6 +45,10 @@ class Job:
     template_video_id: Optional[str] = None
     style_json: Optional[dict[str, Any]] = None
     output_video_url: Optional[str] = None
+    result_paths: dict[str, str] = field(default_factory=dict)
+    render_metadata: Optional[dict[str, Any]] = None
+    logs: list[dict[str, Any]] = field(default_factory=list)
+    stage_history: list[dict[str, Any]] = field(default_factory=list)
     error: Optional[dict[str, Any]] = None
     webhook_url: Optional[str] = None
     processing_config: dict[str, Any] = field(default_factory=dict)
@@ -97,6 +101,10 @@ class Job:
             template_video_id=data.get("template_video_id"),
             style_json=data.get("style_json"),
             output_video_url=data.get("output_video_url"),
+            result_paths=data.get("result_paths", {}),
+            render_metadata=data.get("render_metadata"),
+            logs=data.get("logs", []),
+            stage_history=data.get("stage_history", []),
             error=data.get("error"),
             webhook_url=data.get("webhook_url"),
             processing_config=data.get("processing_config", {}),
@@ -121,6 +129,10 @@ class Job:
             "template_video_id": self.template_video_id,
             "style_json": self.style_json,
             "output_video_url": self.output_video_url,
+            "result_paths": self.result_paths,
+            "render_metadata": self.render_metadata,
+            "logs": self.logs,
+            "stage_history": self.stage_history,
             "error": self.error,
             "webhook_url": self.webhook_url,
             "processing_config": self.processing_config,

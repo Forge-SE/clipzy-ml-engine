@@ -6,9 +6,6 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 from app.core.constants import JobStatus, ProcessingStage
-from app.schemas.style import StyleJSON
-
-
 class JobProgressUpdate(BaseModel):
     """Progress update for a job."""
 
@@ -21,10 +18,28 @@ class JobProgressUpdate(BaseModel):
 class JobProcessingError(BaseModel):
     """Processing error details."""
 
-    stage: ProcessingStage
-    error_message: str
-    error_details: Optional[dict[str, Any]] = None
+    stage: Optional[str] = None
+    message: str
+    details: Optional[dict[str, Any]] = None
     timestamp: datetime
+
+
+class JobLogEntry(BaseModel):
+    """Single log entry attached to a job."""
+
+    timestamp: datetime
+    level: str
+    message: str
+    stage: Optional[str] = None
+
+
+class JobStageEvent(BaseModel):
+    """Stage transition history for a job."""
+
+    timestamp: datetime
+    status: str
+    progress_percent: int
+    stage: Optional[str] = None
 
 
 class JobCreateRequest(BaseModel):
@@ -68,6 +83,14 @@ class JobResponse(BaseModel):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     template_video_id: Optional[str] = None
+    style_json: Optional[dict[str, Any]] = None
+    output_video_url: Optional[str] = None
+    result_paths: dict[str, str] = Field(default_factory=dict)
+    render_metadata: Optional[dict[str, Any]] = None
+    logs: list[JobLogEntry] = Field(default_factory=list)
+    stage_history: list[JobStageEvent] = Field(default_factory=list)
+    error: Optional[JobProcessingError] = None
+    processing_time_seconds: Optional[float] = None
 
     class Config:
         json_schema_extra = {
@@ -88,11 +111,6 @@ class JobResponse(BaseModel):
 
 class JobDetailResponse(JobResponse):
     """Detailed job response including results."""
-
-    style_json: Optional[StyleJSON] = None
-    output_video_url: Optional[str] = None
-    error: Optional[JobProcessingError] = None
-    processing_time_seconds: Optional[float] = None
 
     class Config:
         json_schema_extra = {

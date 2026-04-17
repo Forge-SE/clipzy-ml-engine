@@ -87,6 +87,7 @@ async def upload_video(
 
         # Prepare response
         response_data = VideoUploadResponse(
+            job_id=job.job_id,
             video_id=video.video_id,
             filename=video.filename,
             file_size_bytes=video.file_size_bytes,
