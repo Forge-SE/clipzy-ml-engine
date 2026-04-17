@@ -64,6 +64,5 @@ tqdm==4.66.1
  
 
 # Utilities
-python-multipart==0.0.6
 aiofiles==23.2.1
 rich==13.7.0  # Beautiful terminal tables and progress bars
