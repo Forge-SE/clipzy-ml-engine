@@ -1,55 +1,30 @@
-"""Video rendering pipeline."""
+"""Compatibility wrapper for Stage 6 rendering."""
+
+from __future__ import annotations
 
 from typing import Any
 
-from app.core.logging_config import get_logger
-
-logger = get_logger(__name__)
+from app.pipelines.renderer import Renderer
 
 
 class VideoRenderer:
-    """Renders final video output."""
+    """Backward-compatible wrapper around Renderer."""
 
     @staticmethod
     def render(
         video_path: str,
         output_path: str,
         quality: str = "high",
+        source_video_path: str | None = None,
+        config: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """
-        Render final video output.
-
-        Args:
-            video_path: Path to processed video
-            output_path: Path for final output
-            quality: Output quality (low, medium, high)
-
-        Returns:
-            Dictionary with rendering results
-        """
-        logger.info(
-            f"Starting rendering",
-            extra={"input": video_path, "output": output_path, "quality": quality}
+        """Render the final output, defaulting audio source to the input video."""
+        renderer = Renderer()
+        render_config = dict(config or {})
+        render_config.setdefault("quality", quality)
+        return renderer.render(
+            styled_video_path=video_path,
+            source_video_path=source_video_path or video_path,
+            output_path=output_path,
+            config=render_config,
         )
-
-        # Stub implementation - replace with FFmpeg or similar
-        # This produces the final MP4/WebM with optimal settings
-
-        result = {
-            "output_video_path": output_path,
-            "file_size_bytes": 52428800,  # 50MB stub value
-            "duration_seconds": 60.0,
-            "codec": "h264",
-            "bitrate_kbps": 8000,
-            "frame_rate": 30,
-            "resolution": "1920x1080",
-            "quality_level": quality,
-            "rendering_time_seconds": 20.0,
-            "status": "success",
-        }
-
-        logger.info(
-            f"Rendering complete",
-            extra={"output": output_path}
-        )
-        return result

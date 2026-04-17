@@ -9,11 +9,28 @@ pydantic-settings==2.1.0
 # Redis & Queue
 redis==5.0.1
 
+# Modal (GPU Workers)
+modal>=1.0.0
+
+# Celery & RabbitMQ
+celery==5.3.4
+kombu==5.3.4
+
+# AWS S3
+boto3==1.34.0
+botocore==1.34.0
+
+# Message Queue
+pika==1.3.2
+
+# NumPy constraint for OpenCV/librosa compatibility
+numpy<2
+
 # Video Processing & Analysis
 opencv-python==4.8.0.76
 librosa==0.10.0
 scenedetect[opencv]==0.6.1  # PySceneDetect
-openai-whisper== 20230117
+assemblyai==0.25.0
 transformers==4.36.2
 torch==2.1.1
 soundfile==0.12.1

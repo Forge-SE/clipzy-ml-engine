@@ -21,7 +21,7 @@ def analyze_video(
     video_path: str,
     output_path: Optional[str] = None,
     device: str = "cpu",
-    whisper_model: str = "base",
+    whisper_model: str = "tiny",
     frame_sample_rate: int = 2,
 ) -> dict:
     """

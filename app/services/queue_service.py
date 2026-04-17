@@ -1,4 +1,4 @@
-"""Redis queue service for async job processing."""
+"""Queue service factory supporting both Redis and RabbitMQ."""
 
 import json
 from typing import Optional
@@ -14,8 +14,8 @@ from app.models import Job
 logger = get_logger(__name__)
 
 
-class QueueService:
-    """Manages Redis queue for async job processing."""
+class RedisQueueService:
+    """Redis queue backend."""
 
     def __init__(self, redis_url: str = None):
         """Initialize queue service with Redis connection."""
@@ -40,8 +40,6 @@ class QueueService:
             # Store job details
             self.set_job_status(job.job_id, job.status.value)
             self.set_job_data(job.job_id, job.to_dict())
-
-           
             self.redis_client.rpush(JOB_QUEUE_KEY, job.job_id)
 
             logger.info(f"Job enqueued", extra={"job_id": job.job_id})
@@ -52,7 +50,6 @@ class QueueService:
             raise QueueError(f"Failed to enqueue job: {str(e)}")
 
     def dequeue_job(self) -> Optional[str]:
-       
         try:
             job_id = self.redis_client.lpop(JOB_QUEUE_KEY)
             if job_id:
@@ -154,7 +151,61 @@ class QueueService:
             raise QueueError(f"Failed to clear queue: {str(e)}")
 
 
-# Global queue service instance
+class QueueService:
+    """Factory queue service supporting multiple backends."""
+
+    def __init__(self, backend: str = "redis"):
+        """
+        Initialize queue service with specified backend.
+
+        Args:
+            backend: 'redis' or 'rabbitmq'
+        """
+        if backend == "rabbitmq":
+            try:
+                from app.services.rabbitmq_queue_service import RabbitMQQueueService
+                self._service = RabbitMQQueueService()
+            except ImportError:
+                logger.warning("RabbitMQ not available, falling back to Redis")
+                self._service = RedisQueueService()
+        else:
+            self._service = RedisQueueService()
+
+    def enqueue_job(self, job: Job) -> bool:
+        return self._service.enqueue_job(job)
+
+    def dequeue_job(self) -> Optional[str]:
+        return self._service.dequeue_job()
+
+    def set_job_status(self, job_id: str, status: str) -> bool:
+        return self._service.set_job_status(job_id, status)
+
+    def get_job_status(self, job_id: str) -> Optional[str]:
+        return self._service.get_job_status(job_id)
+
+    def set_job_data(self, job_id: str, data: dict) -> bool:
+        return self._service.set_job_data(job_id, data)
+
+    def get_job_data(self, job_id: str) -> Optional[dict]:
+        return self._service.get_job_data(job_id)
+
+    def set_job_result(self, job_id: str, result: dict) -> bool:
+        return self._service.set_job_result(job_id, result)
+
+    def get_job_result(self, job_id: str) -> Optional[dict]:
+        return self._service.get_job_result(job_id)
+
+    def delete_job(self, job_id: str) -> bool:
+        return self._service.delete_job(job_id)
+
+    def queue_size(self) -> int:
+        return self._service.queue_size()
+
+    def clear_queue(self) -> bool:
+        return self._service.clear_queue()
+
+
+# Global queue service instance (uses Redis by default)
 _queue_service: Optional[QueueService] = None
 
 
@@ -162,5 +213,5 @@ def get_queue_service() -> QueueService:
     """Get or create the queue service instance."""
     global _queue_service
     if _queue_service is None:
-        _queue_service = QueueService()
+        _queue_service = QueueService(backend="rabbitmq")
     return _queue_service

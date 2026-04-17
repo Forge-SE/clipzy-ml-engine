@@ -20,7 +20,8 @@ class ProcessingStage(str, Enum):
     AUDIO_ANALYSIS = "audio_analysis"
     MOTION_ANALYSIS = "motion_analysis"
     STYLE_EXTRACTION = "style_extraction"
-    STYLE_APPLICATION = "style_application"
+    STYLE_TRANSFER = "style_transfer"
+    STYLE_APPLICATION = "style_transfer"
     RENDERING = "rendering"
 
 

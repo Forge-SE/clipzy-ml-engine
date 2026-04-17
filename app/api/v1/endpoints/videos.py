@@ -40,10 +40,13 @@ async def upload_video(
         # Validate video format
         validate_video_file(file.filename, content)
 
-        # Save to temporary location
-        temp_path = settings.storage_path / "uploads" / file.filename
-        temp_path.parent.mkdir(parents=True, exist_ok=True)
-        temp_path.write_bytes(content)
+        # Upload to S3 directly
+        storage_service = get_storage_service()
+        storage_url = storage_service.upload(
+            file_content=content,
+            destination_folder="videos",
+            filename=file.filename,
+        )
 
         # Get video metadata (stub for now)
         metadata = VideoMetadata(
@@ -61,15 +64,20 @@ async def upload_video(
         video = job_service.store_video(
             filename=file.filename,
             file_size_bytes=len(content),
-            storage_path=str(temp_path),
+            storage_path=storage_url,  # Use S3 URL
             metadata=metadata.model_dump(),
         )
 
-        # Create processing job
+        # Create processing job with storage path
         job = job_service.create_job(
             video_id=video.video_id,
             template_video_id=template_video_id,
             webhook_url=webhook_url,
+            processing_config={
+                "storage_path": storage_url,
+                "filename": file.filename,
+                "file_size_bytes": len(content),
+            }
         )
 
         logger.info(
@@ -79,6 +87,7 @@ async def upload_video(
 
         # Prepare response
         response_data = VideoUploadResponse(
+            job_id=job.job_id,
             video_id=video.video_id,
             filename=video.filename,
             file_size_bytes=video.file_size_bytes,

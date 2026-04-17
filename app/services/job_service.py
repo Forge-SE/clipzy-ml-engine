@@ -1,7 +1,7 @@
 """Job service for managing video processing jobs."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from app.core.constants import JobStatus, ProcessingStage
 from app.core.exceptions import JobNotFoundError
@@ -76,17 +76,17 @@ class JobService:
         Raises:
             JobNotFoundError: If job not found
         """
-        # Try memory first
+        # Try Redis first (has updated status during processing)
+        job_data = self.queue_service.get_job_data(job_id)
+        if job_data:
+            return Job.from_dict(job_data)
+
+        # Fall back to memory if not in Redis
         if job_id in _jobs_store:
             return _jobs_store[job_id]
 
-        # Try Redis
-        job_data = self.queue_service.get_job_data(job_id)
-        if not job_data:
-            raise JobNotFoundError(job_id)
-
-        # Reconstruct job from data
-        return self._job_from_dict(job_data)
+        # Not found anywhere
+        raise JobNotFoundError(job_id)
 
     def list_jobs(self, page: int = 1, page_size: int = 10) -> tuple[list[Job], int]:
         """
@@ -132,6 +132,14 @@ class JobService:
             Updated Job object
         """
         job = self.get_job(job_id)
+        previous_status = job.status.value if isinstance(job.status, JobStatus) else job.status
+        previous_stage = (
+            job.current_stage.value
+            if isinstance(job.current_stage, ProcessingStage) and job.current_stage
+            else job.current_stage
+        )
+        next_stage = stage.value if isinstance(stage, ProcessingStage) and stage else stage
+
         job.status = status
         job.progress_percent = progress_percent
         job.current_stage = stage
@@ -145,6 +153,21 @@ class JobService:
         if job.status in (JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED):
             if not job.completed_at:
                 job.completed_at = datetime.utcnow()
+
+        if (
+            not job.stage_history
+            or previous_status != status.value
+            or previous_stage != next_stage
+            or job.stage_history[-1].get("progress_percent") != progress_percent
+        ):
+            job.stage_history.append(
+                {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "status": status.value,
+                    "progress_percent": progress_percent,
+                    "stage": next_stage,
+                }
+            )
 
         # Update storage
         _jobs_store[job_id] = job
@@ -163,6 +186,8 @@ class JobService:
         job_id: str,
         style_json: Optional[dict] = None,
         output_video_url: Optional[str] = None,
+        result_paths: Optional[dict[str, str]] = None,
+        render_metadata: Optional[dict[str, Any]] = None,
     ) -> Job:
         """
         Set job result data.
@@ -171,22 +196,58 @@ class JobService:
             job_id: Job ID
             style_json: Style JSON result
             output_video_url: Output video URL
+            result_paths: Intermediate/final artifact locations
+            render_metadata: Final render stats
 
         Returns:
             Updated Job object
         """
         job = self.get_job(job_id)
-        job.style_json = style_json
-        job.output_video_url = output_video_url
+        if style_json is not None:
+            job.style_json = style_json
+        if output_video_url is not None:
+            job.output_video_url = output_video_url
+        if result_paths is not None:
+            job.result_paths = result_paths
+        if render_metadata is not None:
+            job.render_metadata = render_metadata
 
         _jobs_store[job_id] = job
         self.queue_service.set_job_data(job_id, job.to_dict())
 
         logger.info(
             f"Job result set",
-            extra={"job_id": job_id, "has_style": style_json is not None, "has_output": output_video_url is not None}
+            extra={
+                "job_id": job_id,
+                "has_style": style_json is not None,
+                "has_output": output_video_url is not None,
+                "has_paths": result_paths is not None,
+                "has_render_metadata": render_metadata is not None,
+            }
         )
 
+        return job
+
+    def append_job_log(
+        self,
+        job_id: str,
+        message: str,
+        stage: Optional[ProcessingStage] = None,
+        level: str = "info",
+    ) -> Job:
+        """Append a log entry to a job."""
+        job = self.get_job(job_id)
+        job.logs.append(
+            {
+                "timestamp": datetime.utcnow().isoformat(),
+                "level": level,
+                "message": message,
+                "stage": stage.value if isinstance(stage, ProcessingStage) and stage else stage,
+            }
+        )
+
+        _jobs_store[job_id] = job
+        self.queue_service.set_job_data(job_id, job.to_dict())
         return job
 
     def set_job_error(
@@ -215,8 +276,24 @@ class JobService:
             "details": details or {},
             "timestamp": datetime.utcnow().isoformat(),
         }
+        job.updated_at = datetime.utcnow()
 
-        job = self.update_job_progress(job_id, JobStatus.FAILED)
+        _jobs_store[job_id] = job
+        self.queue_service.set_job_data(job_id, job.to_dict())
+
+        self.append_job_log(
+            job_id,
+            message=error_message,
+            stage=stage,
+            level="error",
+        )
+
+        job = self.update_job_progress(
+            job_id,
+            JobStatus.FAILED,
+            progress_percent=job.progress_percent,
+            stage=stage or job.current_stage,
+        )
 
         logger.error(
             f"Job error set",
@@ -268,23 +345,7 @@ class JobService:
     @staticmethod
     def _job_from_dict(data: dict) -> Job:
         """Reconstruct Job from dictionary."""
-        return Job(
-            job_id=data["job_id"],
-            video_id=data["video_id"],
-            status=JobStatus(data["status"]),
-            progress_percent=data.get("progress_percent", 0),
-            current_stage=ProcessingStage(data["current_stage"]) if data.get("current_stage") else None,
-            created_at=datetime.fromisoformat(data["created_at"]),
-            updated_at=datetime.fromisoformat(data["updated_at"]),
-            started_at=datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None,
-            completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
-            template_video_id=data.get("template_video_id"),
-            style_json=data.get("style_json"),
-            output_video_url=data.get("output_video_url"),
-            error=data.get("error"),
-            webhook_url=data.get("webhook_url"),
-            processing_config=data.get("processing_config", {}),
-        )
+        return Job.from_dict(data)
 
 
 # Global job service instance

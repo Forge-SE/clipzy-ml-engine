@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clipzy Test Console</title>
+  <style>
+    :root {
+      --bg: #081117;
+      --panel: rgba(11, 23, 31, 0.88);
+      --panel-strong: rgba(8, 16, 22, 0.96);
+      --line: rgba(111, 151, 173, 0.22);
+      --text: #e7f1f6;
+      --muted: #90a9b6;
+      --teal: #67e8c7;
+      --amber: #ffc969;
+      --rose: #ff7c7c;
+      --blue: #84c9ff;
+      --shadow: 0 28px 60px rgba(0, 0, 0, 0.35);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "IBM Plex Mono", "Consolas", "SFMono-Regular", monospace;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(103, 232, 199, 0.12), transparent 24%),
+        radial-gradient(circle at top right, rgba(132, 201, 255, 0.12), transparent 28%),
+        linear-gradient(180deg, #0a141a 0%, #050a0e 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+      opacity: 0.34;
+    }
+
+    .shell {
+      width: min(1200px, calc(100vw - 32px));
+      margin: 28px auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .hero {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .eyebrow {
+      color: var(--teal);
+      text-transform: uppercase;
+      letter-spacing: 0.24em;
+      font-size: 11px;
+    }
+
+    h1 {
+      margin: 8px 0 0;
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 0.94;
+      letter-spacing: -0.06em;
+    }
+
+    .subtle {
+      color: var(--muted);
+      max-width: 720px;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    .pill {
+      border: 1px solid rgba(103, 232, 199, 0.28);
+      color: var(--teal);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      background: rgba(103, 232, 199, 0.08);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+    }
+
+    .card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(132, 201, 255, 0.18);
+      background: rgba(1, 10, 15, 0.72);
+      color: var(--text);
+      padding: 14px 16px;
+      outline: none;
+      font: inherit;
+    }
+
+    input[type="text"]:focus {
+      border-color: rgba(132, 201, 255, 0.55);
+      box-shadow: 0 0 0 3px rgba(132, 201, 255, 0.12);
+    }
+
+    .dropzone {
+      position: relative;
+      min-height: 210px;
+      border-radius: 18px;
+      border: 1px dashed rgba(103, 232, 199, 0.35);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(103, 232, 199, 0.10), transparent 32%),
+        linear-gradient(180deg, rgba(11, 27, 35, 0.9), rgba(5, 11, 16, 0.95));
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 22px;
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragging {
+      transform: translateY(-2px);
+      border-color: rgba(103, 232, 199, 0.68);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(103, 232, 199, 0.14), transparent 36%),
+        linear-gradient(180deg, rgba(14, 35, 43, 0.95), rgba(7, 13, 18, 0.98));
+    }
+
+    .dropzone strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .status-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+    }
+
+    .stage-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stage {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid transparent;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+
+    .stage[data-state="done"] {
+      border-color: rgba(103, 232, 199, 0.18);
+      background: rgba(103, 232, 199, 0.05);
+    }
+
+    .stage[data-state="active"] {
+      border-color: rgba(132, 201, 255, 0.36);
+      background: rgba(132, 201, 255, 0.06);
+    }
+
+    .stage[data-state="failed"] {
+      border-color: rgba(255, 124, 124, 0.28);
+      background: rgba(255, 124, 124, 0.06);
+    }
+
+    .dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 999px;
+      border: 2px solid rgba(144, 169, 182, 0.45);
+      position: relative;
+      box-shadow: inset 0 0 0 2px transparent;
+    }
+
+    .stage[data-state="done"] .dot {
+      border-color: rgba(103, 232, 199, 0.9);
+      background: var(--teal);
+      box-shadow: 0 0 18px rgba(103, 232, 199, 0.4);
+    }
+
+    .stage[data-state="active"] .dot {
+      border-color: rgba(132, 201, 255, 0.85);
+      box-shadow: 0 0 18px rgba(132, 201, 255, 0.32);
+    }
+
+    .stage[data-state="active"] .dot::after {
+      content: "";
+      position: absolute;
+      inset: -7px;
+      border-radius: 999px;
+      border: 1px solid rgba(132, 201, 255, 0.28);
+      animation: pulse 1.3s ease infinite;
+    }
+
+    .stage-name {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .stage-meta {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin-bottom: 8px;
+    }
+
+    .metric strong {
+      font-size: 20px;
+      letter-spacing: -0.05em;
+    }
+
+    .log-pane {
+      padding: 18px;
+      min-height: 300px;
+      max-height: 420px;
+      overflow: auto;
+      border-radius: 18px;
+      background: rgba(3, 10, 14, 0.92);
+      border: 1px solid rgba(111, 151, 173, 0.16);
+    }
+
+    .log-line {
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      font-size: 12px;
+    }
+
+    .log-line:last-child {
+      border-bottom: 0;
+    }
+
+    .log-time {
+      color: var(--muted);
+    }
+
+    .log-level {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--blue);
+    }
+
+    .log-level.warning {
+      color: var(--amber);
+    }
+
+    .log-level.error {
+      color: var(--rose);
+    }
+
+    .preview {
+      display: none;
+      gap: 14px;
+    }
+
+    .preview.visible {
+      display: grid;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: black;
+      min-height: 260px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(103, 232, 199, 0.28);
+      background: rgba(103, 232, 199, 0.08);
+      cursor: pointer;
+      transition: transform 140ms ease, border-color 140ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(103, 232, 199, 0.48);
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.88); opacity: 0.8; }
+      100% { transform: scale(1.25); opacity: 0; }
+    }
+
+    @media (max-width: 920px) {
+      .controls,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="panel hero">
+      <div class="hero-top">
+        <div>
+          <div class="eyebrow">Dev Console</div>
+          <h1>Clipzy Render Watch</h1>
+        </div>
+        <div class="pill" id="connection-pill">Idle</div>
+      </div>
+
+      <div class="subtle">
+        Drop in a video, upload it, and watch the job progress in real time. The console polls your FastAPI job endpoint every 2 seconds and shows stage changes, render stats, logs, and a final MP4 preview.
+      </div>
+
+      <div class="controls">
+        <div class="card">
+          <label class="label" for="base-url">Base URL</label>
+          <input id="base-url" type="text" value="http://localhost:8000/api/v1" />
+          <div class="status-bar">
+            <div id="job-id">Job: none</div>
+            <div id="current-stage">Stage: waiting</div>
+            <div id="current-status">Status: idle</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="label">Upload</div>
+          <div class="dropzone" id="dropzone">
+            <div>
+              <strong>Drop Video To Start</strong>
+              <div class="hint">
+                MP4, MOV, AVI, MKV, or WEBM.<br />
+                Click here if you want to pick a file manually.
+              </div>
+            </div>
+          </div>
+          <input id="file-input" type="file" accept="video/*" hidden />
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <section class="panel card">
+        <div class="label">Stage Tracker</div>
+        <div class="stage-list" id="stage-list"></div>
+      </section>
+
+      <section class="panel card">
+        <div class="label">Completion Stats</div>
+        <div class="metric-grid" id="metric-grid">
+          <div class="metric"><span>File Size</span><strong>--</strong></div>
+          <div class="metric"><span>Duration</span><strong>--</strong></div>
+          <div class="metric"><span>Render Time</span><strong>--</strong></div>
+          <div class="metric"><span>Resolution</span><strong>--</strong></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel card">
+      <div class="label">Logs</div>
+      <div class="log-pane" id="log-pane">
+        <div class="empty">The log pane will fill as soon as an upload begins.</div>
+      </div>
+    </section>
+
+    <section class="panel card preview" id="preview-panel">
+      <div class="label">Output</div>
+      <video id="preview-video" controls playsinline></video>
+      <div class="actions">
+        <a class="button" id="download-button" href="#" download>Download MP4</a>
+        <a class="button" id="open-result-button" href="#" target="_blank" rel="noopener noreferrer">Open Result</a>
+      </div>
+      <div class="subtle" id="output-path"></div>
+    </section>
+  </div>
+
+  <script>
+    const STAGES = [
+      { key: "upload", label: "Upload" },
+      { key: "video_analysis", label: "Video Analysis" },
+      { key: "audio_analysis", label: "Audio Analysis" },
+      { key: "motion_analysis", label: "Motion Analysis" },
+      { key: "style_extraction", label: "Style Extraction" },
+      { key: "style_transfer", label: "Style Transfer" },
+      { key: "rendering", label: "Rendering" },
+      { key: "complete", label: "Complete" }
+    ];
+
+    const state = {
+      jobId: null,
+      pollingHandle: null,
+      job: null,
+      uploadStartedAt: null,
+      uploadCompletedAt: null,
+      logs: [],
+      serverLogKeys: new Set(),
+      lastSeenStage: null,
+      lastSeenStatus: null
+    };
+
+    const elements = {
+      baseUrl: document.getElementById("base-url"),
+      dropzone: document.getElementById("dropzone"),
+      fileInput: document.getElementById("file-input"),
+      stageList: document.getElementById("stage-list"),
+      logPane: document.getElementById("log-pane"),
+      connectionPill: document.getElementById("connection-pill"),
+      jobId: document.getElementById("job-id"),
+      currentStage: document.getElementById("current-stage"),
+      currentStatus: document.getElementById("current-status"),
+      metricGrid: document.getElementById("metric-grid"),
+      previewPanel: document.getElementById("preview-panel"),
+      previewVideo: document.getElementById("preview-video"),
+      downloadButton: document.getElementById("download-button"),
+      openResultButton: document.getElementById("open-result-button"),
+      outputPath: document.getElementById("output-path")
+    };
+
+    renderStageList();
+    renderMetrics();
+
+    elements.dropzone.addEventListener("click", () => elements.fileInput.click());
+    elements.fileInput.addEventListener("change", (event) => {
+      const [file] = event.target.files || [];
+      if (file) {
+        handleFile(file);
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      elements.dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        elements.dropzone.classList.add("dragging");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      elements.dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        elements.dropzone.classList.remove("dragging");
+      });
+    });
+
+    elements.dropzone.addEventListener("drop", (event) => {
+      const [file] = event.dataTransfer.files || [];
+      if (file) {
+        handleFile(file);
+      }
+    });
+
+    async function handleFile(file) {
+      resetRun();
+      state.uploadStartedAt = new Date();
+      setConnection("Uploading");
+      addLog(`Uploading ${file.name} (${formatBytes(file.size)})`, "info");
+
+      try {
+        const response = await uploadFile(file);
+        const jobId = extractJobId(response);
+        if (!jobId) {
+          throw new Error("Upload succeeded but no job_id was returned.");
+        }
+
+        state.uploadCompletedAt = new Date();
+        state.jobId = jobId;
+        elements.jobId.textContent = `Job: ${jobId}`;
+        addLog(`Upload complete. Job created: ${jobId}`, "info");
+        startPolling();
+      } catch (error) {
+        setConnection("Upload Failed", true);
+        addLog(error.message || String(error), "error");
+      }
+    }
+
+    async function uploadFile(file) {
+      const baseUrl = normalizeBaseUrl(elements.baseUrl.value);
+      const endpoints = [`${baseUrl}/upload`, `${baseUrl}/videos/upload`];
+      const formData = new FormData();
+      formData.append("file", file);
+
+      let lastError = null;
+
+      for (const endpoint of endpoints) {
+        try {
+          addLog(`POST ${endpoint}`, "info");
+          const response = await fetch(endpoint, {
+            method: "POST",
+            body: formData
+          });
+
+          if (!response.ok) {
+            if (response.status === 404 || response.status === 405) {
+              lastError = new Error(`Upload endpoint unavailable at ${endpoint}`);
+              continue;
+            }
+            const message = await safeErrorMessage(response);
+            throw new Error(message || `Upload failed with status ${response.status}`);
+          }
+
+          return await response.json();
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      throw lastError || new Error("Unable to reach any upload endpoint.");
+    }
+
+    function extractJobId(payload) {
+      if (payload?.data?.job_id) {
+        return payload.data.job_id;
+      }
+      const message = payload?.message || "";
+      const match = message.match(/job[_: ]+([a-z0-9_]+)/i);
+      if (match) {
+        return match[1].startsWith("job_") ? match[1] : `job_${match[1]}`;
+      }
+      return null;
+    }
+
+    function startPolling() {
+      pollJob();
+      state.pollingHandle = setInterval(pollJob, 2000);
+    }
+
+    async function pollJob() {
+      if (!state.jobId) {
+        return;
+      }
+
+      const baseUrl = normalizeBaseUrl(elements.baseUrl.value);
+      const endpoint = `${baseUrl}/jobs/${state.jobId}`;
+
+      try {
+        setConnection("Polling");
+        const response = await fetch(endpoint, { cache: "no-store" });
+        if (!response.ok) {
+          const message = await safeErrorMessage(response);
+          throw new Error(message || `Polling failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const job = payload.data;
+        state.job = job;
+
+        mergeServerLogs(job.logs || []);
+        syncStatus(job);
+        renderStageList(job);
+        renderMetrics(job);
+        renderPreview(job);
+
+        if (["completed", "failed", "cancelled"].includes(job.status)) {
+          stopPolling();
+          setConnection(job.status === "completed" ? "Complete" : "Stopped", job.status !== "completed");
+        }
+      } catch (error) {
+        addLog(error.message || String(error), "error");
+        setConnection("Disconnected", true);
+      }
+    }
+
+    function stopPolling() {
+      if (state.pollingHandle) {
+        clearInterval(state.pollingHandle);
+        state.pollingHandle = null;
+      }
+    }
+
+    function resetRun() {
+      stopPolling();
+      state.jobId = null;
+      state.job = null;
+      state.uploadStartedAt = null;
+      state.uploadCompletedAt = null;
+      state.logs = [];
+      state.serverLogKeys.clear();
+      state.lastSeenStage = null;
+      state.lastSeenStatus = null;
+      elements.jobId.textContent = "Job: none";
+      elements.currentStage.textContent = "Stage: waiting";
+      elements.currentStatus.textContent = "Status: idle";
+      elements.previewPanel.classList.remove("visible");
+      elements.previewVideo.removeAttribute("src");
+      elements.previewVideo.load();
+      elements.outputPath.textContent = "";
+      renderStageList();
+      renderMetrics();
+      renderLogs();
+    }
+
+    function syncStatus(job) {
+      const stage = job.current_stage || (job.status === "completed" ? "complete" : "queued");
+      elements.currentStage.textContent = `Stage: ${formatStageLabel(stage)}`;
+      elements.currentStatus.textContent = `Status: ${job.status}`;
+
+      if (stage && stage !== state.lastSeenStage) {
+        addLog(`Stage changed to ${formatStageLabel(stage)}`, "info");
+        state.lastSeenStage = stage;
+      }
+
+      if (job.status && job.status !== state.lastSeenStatus) {
+        addLog(`Status changed to ${job.status}`, job.status === "failed" ? "error" : "info");
+        state.lastSeenStatus = job.status;
+      }
+    }
+
+    function renderStageList(job = null) {
+      const activeStage = job?.current_stage || null;
+      const failed = job?.status === "failed";
+      const completed = job?.status === "completed";
+      const stageDurations = buildStageDurations(job);
+
+      elements.stageList.innerHTML = STAGES.map((stage) => {
+        const stateName = getStageState(stage.key, activeStage, completed, failed, stageDurations);
+        const duration = stageDurations[stage.key];
+        return `
+          <div class="stage" data-state="${stateName}">
+            <div class="dot"></div>
+            <div>
+              <div class="stage-name">${stage.label}</div>
+            </div>
+            <div class="stage-meta">${duration ? formatDuration(duration) : "--"}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function buildStageDurations(job) {
+      const durations = {};
+      const now = Date.now();
+
+      if (state.uploadStartedAt) {
+        const uploadEnd = state.uploadCompletedAt ? state.uploadCompletedAt.getTime() : now;
+        durations.upload = Math.max(0, uploadEnd - state.uploadStartedAt.getTime()) / 1000;
+      }
+
+      const stageHistory = Array.isArray(job?.stage_history) ? job.stage_history : [];
+      const orderedStages = [];
+
+      for (const event of stageHistory) {
+        if (!event?.stage) {
+          continue;
+        }
+        if (!orderedStages.some((entry) => entry.stage === event.stage)) {
+          orderedStages.push({
+            stage: event.stage,
+            timestamp: new Date(event.timestamp).getTime()
+          });
+        }
+      }
+
+      orderedStages.forEach((entry, index) => {
+        const next = orderedStages[index + 1];
+        const end = next ? next.timestamp : (job?.completed_at ? new Date(job.completed_at).getTime() : now);
+        durations[entry.stage] = Math.max(0, end - entry.timestamp) / 1000;
+      });
+
+      if (job?.status === "completed" && job?.completed_at) {
+        durations.complete = 0;
+      } else if (job?.status === "failed") {
+        durations.complete = 0;
+      }
+
+      return durations;
+    }
+
+    function getStageState(stageKey, activeStage, completed, failed, stageDurations) {
+      const stageIndex = STAGES.findIndex((stage) => stage.key === stageKey);
+      const activeIndex = STAGES.findIndex((stage) => stage.key === activeStage);
+
+      if (stageKey === "complete") {
+        if (completed) return "done";
+        if (failed) return "failed";
+        return "pending";
+      }
+
+      if (failed && stageKey === activeStage) {
+        return "failed";
+      }
+
+      if (completed && (stageDurations[stageKey] !== undefined || stageKey === activeStage)) {
+        return "done";
+      }
+
+      if (stageKey === activeStage) {
+        return "active";
+      }
+
+      if (activeIndex > -1 && stageIndex < activeIndex) {
+        return "done";
+      }
+
+      if (stageDurations[stageKey] !== undefined) {
+        return "done";
+      }
+
+      return "pending";
+    }
+
+    function renderMetrics(job = null) {
+      const renderMetadata = job?.render_metadata || {};
+      const metrics = [
+        { label: "File Size", value: renderMetadata.file_size_bytes ? formatBytes(renderMetadata.file_size_bytes) : "--" },
+        { label: "Duration", value: renderMetadata.duration_seconds ? formatDuration(renderMetadata.duration_seconds) : "--" },
+        { label: "Render Time", value: renderMetadata.rendering_time_seconds ? formatDuration(renderMetadata.rendering_time_seconds) : "--" },
+        { label: "Resolution", value: renderMetadata.resolution || "--" }
+      ];
+
+      elements.metricGrid.innerHTML = metrics.map((metric) => `
+        <div class="metric">
+          <span>${metric.label}</span>
+          <strong>${metric.value}</strong>
+        </div>
+      `).join("");
+    }
+
+    function renderPreview(job) {
+      if (!job || job.status !== "completed" || !state.jobId) {
+        return;
+      }
+
+      const baseUrl = normalizeBaseUrl(elements.baseUrl.value);
+      const downloadUrl = `${baseUrl}/jobs/${state.jobId}/download`;
+      elements.previewPanel.classList.add("visible");
+      elements.previewVideo.src = downloadUrl;
+      elements.downloadButton.href = downloadUrl;
+      elements.openResultButton.href = downloadUrl;
+      elements.outputPath.textContent = job.output_video_url || "Output ready";
+    }
+
+    function mergeServerLogs(serverLogs) {
+      for (const logEntry of serverLogs) {
+        const key = `${logEntry.timestamp}|${logEntry.level}|${logEntry.message}`;
+        if (state.serverLogKeys.has(key)) {
+          continue;
+        }
+        state.serverLogKeys.add(key);
+        state.logs.push({
+          timestamp: new Date(logEntry.timestamp),
+          level: (logEntry.level || "info").toLowerCase(),
+          message: logEntry.message,
+          stage: logEntry.stage || null
+        });
+      }
+      renderLogs();
+    }
+
+    function addLog(message, level = "info") {
+      state.logs.push({
+        timestamp: new Date(),
+        level,
+        message,
+        stage: null
+      });
+      renderLogs();
+    }
+
+    function renderLogs() {
+      if (!state.logs.length) {
+        elements.logPane.innerHTML = `<div class="empty">The log pane will fill as soon as an upload begins.</div>`;
+        return;
+      }
+
+      const ordered = [...state.logs].sort((a, b) => a.timestamp - b.timestamp);
+      elements.logPane.innerHTML = ordered.map((log) => `
+        <div class="log-line">
+          <div class="log-time">${formatClock(log.timestamp)}</div>
+          <div class="log-level ${log.level}">${log.level}</div>
+          <div>${escapeHtml(log.message)}${log.stage ? ` <span style="color: var(--muted)">[${escapeHtml(formatStageLabel(log.stage))}]</span>` : ""}</div>
+        </div>
+      `).join("");
+
+      elements.logPane.scrollTop = elements.logPane.scrollHeight;
+    }
+
+    function setConnection(label, isError = false) {
+      elements.connectionPill.textContent = label;
+      elements.connectionPill.style.color = isError ? "var(--rose)" : "var(--teal)";
+      elements.connectionPill.style.borderColor = isError ? "rgba(255, 124, 124, 0.28)" : "rgba(103, 232, 199, 0.28)";
+      elements.connectionPill.style.background = isError ? "rgba(255, 124, 124, 0.08)" : "rgba(103, 232, 199, 0.08)";
+    }
+
+    function normalizeBaseUrl(url) {
+      return url.replace(/\/+$/, "");
+    }
+
+    function formatStageLabel(value) {
+      return String(value || "waiting")
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (match) => match.toUpperCase());
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes && bytes !== 0) return "--";
+      const units = ["B", "KB", "MB", "GB"];
+      let value = bytes;
+      let unitIndex = 0;
+      while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex += 1;
+      }
+      return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+    }
+
+    function formatDuration(seconds) {
+      if (!Number.isFinite(seconds)) {
+        return "--";
+      }
+      if (seconds < 60) {
+        return `${seconds.toFixed(seconds >= 10 ? 0 : 1)}s`;
+      }
+      const minutes = Math.floor(seconds / 60);
+      const remainder = Math.round(seconds % 60);
+      return `${minutes}m ${remainder}s`;
+    }
+
+    function formatClock(date) {
+      return new Date(date).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    async function safeErrorMessage(response) {
+      try {
+        const payload = await response.json();
+        return payload?.detail || payload?.message || JSON.stringify(payload);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

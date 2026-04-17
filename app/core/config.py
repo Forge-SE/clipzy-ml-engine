@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -31,6 +32,34 @@ class Settings(BaseSettings):
     LOCAL_STORAGE_PATH: str = "./storage"
     MAX_FILE_SIZE_MB: int = 1000  # 1GB max file size
 
+    # AWS S3 Config
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
+    AWS_REGION: str = "us-east-1"
+    S3_BUCKET_NAME: str = "clipzy-videos"
+    S3_UPLOADS_PREFIX: str = "uploads"
+
+    # Modal Config
+    MODAL_TOKEN_ID: str = ""
+    MODAL_TOKEN_SECRET: str = ""
+    MODAL_GPU_TYPE: str = "A100"
+    MODAL_TIMEOUT_SECONDS: int = 3600
+
+    # Assembly AI Config
+    ASSEMBLYAI_API_KEY: str = ""
+
+    # RabbitMQ Config
+    RABBITMQ_HOST: str = "localhost"
+    RABBITMQ_PORT: int = 5672
+    RABBITMQ_USER: str = "guest"
+    RABBITMQ_PASSWORD: str = "guest"
+    RABBITMQ_VHOST: str = "/"
+    RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
+
+    # Celery Config
+    CELERY_BROKER_URL: str = "amqp://guest:guest@localhost:5672/"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
+
     # Processing Config
     PROCESSING_TIMEOUT_SECONDS: int = 3600  # 1 hour
     MAX_CONCURRENT_JOBS: int = 5
@@ -44,6 +73,18 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def normalize_debug_value(cls, value):
+        """Accept common environment strings for DEBUG."""
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"release", "prod", "production", "false", "0", "off"}:
+                return False
+            if normalized in {"debug", "dev", "development", "true", "1", "on"}:
+                return True
+        return value
 
     @property
     def storage_path(self) -> Path:

@@ -55,6 +55,7 @@ class VideoResponse(BaseModel):
 class VideoUploadResponse(BaseModel):
     """Response after video upload."""
 
+    job_id: Optional[str] = None
     video_id: str
     filename: str
     file_size_bytes: int
@@ -65,6 +66,7 @@ class VideoUploadResponse(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
+                "job_id": "job_xyz789abc123",
                 "video_id": "vid_abc123def456",
                 "filename": "my_video.mp4",
                 "file_size_bytes": 52428800,

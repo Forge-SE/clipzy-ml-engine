@@ -1,0 +1,11 @@
+[default]
+token_id = "ak-HJG2fACxTECcLsfGy78TOU"
+token_secret = "as-eDEMh1KQ7iStl9MITdihTf"
+loglevel = "WARNING"
+traceback = false
+
+[dev]
+token_id = "ak-HJG2fACxTECcLsfGy78TOU"
+token_secret = "as-eDEMh1KQ7iStl9MITdihTf"
+loglevel = "INFO"
+traceback = false
