@@ -32,7 +32,7 @@ librosa==0.10.0
 scenedetect[opencv]==0.6.1  # PySceneDetect
 assemblyai==0.25.0
 transformers==4.36.2
-torch==2.1.1
+torch==2.2.1
 soundfile==0.12.1
 Pillow==10.1.0
 scikit-image==0.22.0
